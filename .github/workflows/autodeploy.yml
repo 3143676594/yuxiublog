@@ -1,63 +1,53 @@
-name: 自动部署
-# 当有改动推送到master分支时，启动Action
+name: Deploy
+
 on:
   push:
     branches:
       - main
-      #2020年10月后github新建仓库默认分支改为main，注意更改
-  release:
-    types:
-      - published
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: 检查分支
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          ref: main
+          submodules: true # Checkout private submodules(themes or something else).
 
-      - name: 安装 Node
-        uses: actions/setup-node@v1
+      - name: Use Node.js 21
+        uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
+          # Examples: 20, 18.19, >=16.20.2, lts/Iron, lts/Hydrogen, *, latest, current, node
+          # Ref: https://github.com/actions/setup-node#supported-version-syntax
+          node-version: "21"
 
-      - name: 安装 Hexo
-        run: |
-          export TZ='Asia/Shanghai'
-          npm install hexo-cli -g
-
-      - name: 缓存 Hexo
-        id: cache-npm
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-node-modules
+      - name: Cache NPM dependencies
+        uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{runner.OS}}-${{hashFiles('**/package-lock.json')}}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+            ${{ runner.OS }}-npm-cache
 
-      - name: 安装依赖
-        if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          npm install gulp -g #全局安装gulp
-          npm install --save
+          npm install
+          npm run build
 
-      - name: 生成静态文件
-        run: |
-          hexo clean
-          hexo generate
-
-
-      - name: 部署到Github
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          token: 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
-          repository-name: 3143676594/yuxiublog
-          branch: master
-          folder: public
-          commit-message: "${{ github.event.head_commit.message }} Updated By Github Actions"
+          path: ./public
+
+      # Deploy hexo blog website.
+      - name: Deploy
+        id: deploy
+        run: |
+          cd ./public
+          git init
+          git config --global user.name '${{ secrets.USERNAME }}'
+          git config --global user.email '${{ secrets.EMAIL }}'
+          git add .
+          git commit -m "${{ github.event.head_commit.message }} $(date +"%Z %Y-%m-%d %A %H:%M:%S") Updated By Github Actions"
+          git push --force https://${{ secrets.DEPLOY_KEY }}@github.com/${{ secrets.USERNAME }}/${{ secrets.USERNAME }}.github.io.git master:master
