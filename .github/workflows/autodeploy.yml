@@ -21,7 +21,7 @@ jobs:
       - name: 安装 Node
         uses: actions/setup-node@v1
         with:
-          node-version: "16.x"
+          node-version: "18.x"
 
       - name: 安装 Hexo
         run: |
@@ -44,20 +44,20 @@ jobs:
       - name: 安装依赖
         if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
         run: |
-          npm install gulp-cli -g #全局安装gulp
+          npm install gulp -g #全局安装gulp
           npm install --save
 
       - name: 生成静态文件
         run: |
           hexo clean
           hexo generate
-          gulp
+
 
       - name: 部署到Github
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          token: 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
-          repository-name: 3143676594/yuxiublog.git
+          token: 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
+          repository-name: 3143676594/yuxiublog
           branch: master
           folder: public
           commit-message: "${{ github.event.head_commit.message }} Updated By Github Actions"
