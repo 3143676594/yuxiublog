@@ -317,7 +317,7 @@ readmode: true
 
 # dark mode
 darkmode:
-  enable: true
+  enable: false
   # Toggle Button to switch dark/light mode
   button: false
   # Switch dark/light mode automatically (自動切換 dark mode和 light mode)
@@ -722,7 +722,7 @@ clickShowText:
 
 # Default display mode (網站默認的顯示模式)
 # light (default) / dark
-display_mode: dark
+display_mode: light
 
 # Beautify (美化頁面顯示)
 beautify:
@@ -868,7 +868,6 @@ snackbar:
 # https://instant.page/
 # prefetch (預加載)
 instantpage: false
-
 # https://github.com/vinta/pangu.js
 # Insert a space between Chinese character and English character (中英文之間添加空格)
 pangu:
